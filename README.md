@@ -21,6 +21,9 @@
 
   ## Usage
   This application generates an HTML page based on the user's input. Simply answer a series of questions and the app will do all of the work.
+  Here you can watch a video of the functionality of the app:
+
+  ![Template Engine Demo](assets/templatevideo.mp4)
 
   ## Contributors
   Sydney Goodwill
