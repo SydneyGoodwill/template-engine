@@ -5,27 +5,34 @@ const inquirer = require("inquirer");
 const path = require("path");
 const fs = require("fs");
 
-const intern = new Intern();
-
 
 const OUTPUT_DIR = path.resolve(__dirname, "output");
 const outputPath = path.join(OUTPUT_DIR, "team.html");
 
 const render = require("./lib/htmlRenderer");
 
+const employees = [];
+
 
 // Write code to use inquirer to gather information about the development team members,
 // and to create objects for each team member (using the correct classes as blueprints!)
 
+
+
+// Initial Prompt
 const mainQuestion = [
     {
         type: "list",
-        message: "What role does the team member play?",
         name: "role",
-        choices: ["Manager", "Engineer", "Intern", "Complete Team"]
-    }
+        message: "What role does the team member play?",
+        choices: [
+            "Manager",
+            "Engineer",
+            "Intern"]
+    },
 ];
 
+// Prompt for Intern
 const internQuestions = [
     {
         type: "input",
@@ -35,7 +42,7 @@ const internQuestions = [
     {
         type: "input",
         message: "What is the team member's ID?",
-        name: "ID"
+        name: "id"
     },
     {
         type: "input",
@@ -47,64 +54,121 @@ const internQuestions = [
        message: "What school does the intern attend?",
        name: "school"
     },
+    {
+        type: "confirm",
+        name: "addnewmember",
+        message: "Do you want to add another team member?",
+        default: true,
+    },
+];
+
+// Prompt for Manager
+const managerQuestions = [
+    {
+        type: "input",
+        message: "What is the Manager's name?",
+        name: "name"
+    },
+    {
+        type: "input",
+        message: "What is the Manager's ID?",
+        name: "id"
+    },
+    {
+        type: "input",
+        message: "What is the Manager's email?",
+        name: "email"
+    },
+    {
+       type: "input",
+       message: "What is the Manager's office number?",
+       name: "officeNumber"
+    },
+    {
+        type: "confirm",
+        name: "addnewmember",
+        message: "Do you want to add another team member?",
+        default: true,
+    },
+];
+
+// Prompt for Engineer
+const engineerQuestions = [
+    {
+        type: "input",
+        message: "What is the Engineer's name?",
+        name: "name"
+    },
+    {
+        type: "input",
+        message: "What is the Engineer's ID?",
+        name: "id"
+    },
+    {
+        type: "input",
+        message: "What is the Engineer's email?",
+        name: "email"
+    },
+    {
+       type: "input",
+       message: "What is the Engineer's GitHub name?",
+       name: "github"
+    },
+    {
+        type: "confirm",
+        name: "addnewmember",
+        message: "Do you want to add another team member?",
+        default: true,
+    },
 ];
 
 
 function init() {
-    inquirer.prompt(mainQuestion)
-    .then(function(data){
-        if (this.mainQuestion.choices["Intern"]) {
-            const internResult = new Intern (data);
-            fs.appendFile("./templates/intern.html", internResult, (err) => {
-                if (err) throw err;
-                console.log("intern.html updated successfully");
-            });
-        } else if (mainQuestion.choices["Manager"]) {
-            const managerResult = new Manager (data);
-            fs.appendFile("./templates/manager.html", managerResult, (err) => {
-                if (err) throw err;
-                console.log("manager.html updated successfully");
-            });
-        } else if (mainQuestion.choices["Engineer"]) {
-            const engineerResult = new Engineer (data);
-            fs.appendFile("./templates/engineer.html", engineerResult, (err) => {
-                if (err) throw err;
-                console.log("engineer.html updated successfully");
-            });
-        } else if (mainQuestion.choices["Complete Team"]) {
-            const teamComplete = new OUTPUT_DIR (data);
-            fs.appendFile("./templates/main.html", teamComplete, (err) => {
-                if (err) throw err;
-                console.log("main.html updated successfully");
-            });
-        }
-        
-        
-        
-
-
+   return inquirer
+   .prompt(mainQuestion).then(response => {
+    // If the user answered 'Intern' for the initial prompt
+   if (response.role === "Intern") {
+       inquirer.prompt(internQuestions).then(data => {
+           // A new intern will be created from the input from Intern Prompts
+           const intern = new Intern (data.name, data.id, data.email, data.school);
+           employees.push(intern);
+           if (data.addnewmember) {
+               // If the user wants to add a new user, it will start again w/the Initial Prompt
+               init();
+           }else {
+               // If the user does not want to add a new team member, it will render and generate an HTML file from the employees array
+               fs.writeFile(outputPath, render(employees), () => {})
+               console.log("Generated HTML complete.")
+           }
+    })
+    }
+    if (response.role === "Manager") {
+        inquirer.prompt(managerQuestions).then(data => {
+            const manager = new Manager (data.name, data.id, data.email,data.officeNumber);
+            employees.push(manager);
+            if (data.addnewmember) {
+                init();
+            }else {
+                fs.writeFile(outputPath, render(employees), () => {})
+                console.log("Generated HTML complete.")
+            }
+    })
+    }
+    if (response.role === "Engineer") {
+        inquirer.prompt(engineerQuestions).then(data => {
+            const engineer = new Engineer (data.name, data.id, data.email, data.github);
+            employees.push(engineer);
+            if (data.addnewmember) {
+                init();
+            }else {
+                fs.writeFile(outputPath, render(employees), () => {})
+                console.log("Generated HTML complete.")
+            }
 
     })
+    }
+})
 }
 
+
 init();
-
-// After the user has input all employees desired, call the `render` function (required
-// above) and pass in an array containing all employee objects; the `render` function will
-// generate and return a block of HTML including templated divs for each employee!
-
-// After you have your html, you're now ready to create an HTML file using the HTML
-// returned from the `render` function. Now write it to a file named `team.html` in the
-// `output` folder. You can use the variable `outputPath` above target this location.
-// Hint: you may need to check if the `output` folder exists and create it if it
-// does not.
-
-// HINT: each employee type (manager, engineer, or intern) has slightly different
-// information; write your code to ask different questions via inquirer depending on
-// employee type.
-
-// HINT: make sure to build out your classes first! Remember that your Manager, Engineer,
-// and Intern classes should all extend from a class named Employee; see the directions
-// for further information. Be sure to test out each class and verify it generates an
-// object with the correct structure and methods. This structure will be crucial in order
-// for the provided `render` function to work! ```
